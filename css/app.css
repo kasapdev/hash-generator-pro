@@ -1,0 +1,94 @@
+/* =====================================================================
+   Hash Generator Pro — app.css
+   Extends the shared design system (base.css). Colors derive ONLY from
+   base.css CSS variables so dark + light themes both work.
+   ===================================================================== */
+
+/* ---- Theme toggle icon swap (sun in dark, moon in light) ---- */
+[data-theme="light"] .icon-sun { display: none; }
+.icon-moon { display: none; }
+
+/* ===================== Status badge ===================== */
+#statusBadge .status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-muted); flex: none;
+  transition: background var(--dur-2), box-shadow var(--dur-2);
+}
+#statusBadge.is-valid { background: var(--success-soft); color: var(--success); border-color: transparent; }
+#statusBadge.is-valid .status-dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
+#statusBadge.is-busy { background: var(--info-soft); color: var(--info); border-color: transparent; }
+#statusBadge.is-busy .status-dot { background: var(--info); box-shadow: 0 0 10px var(--info); }
+
+/* ===================== Input panel ===================== */
+.input-panel { margin-top: var(--space-5); }
+
+#textInput {
+  width: 100%;
+  min-height: 180px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.file-drop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-4);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+/* ===================== Results ===================== */
+.results-panel { margin-top: var(--space-5); }
+
+.hash-list { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.hash-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+.hash-row .hash-algo {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  width: 76px;
+  flex: none;
+}
+.hash-row .hash-value {
+  flex: 1;
+  min-width: 200px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  word-break: break-all;
+  color: var(--text);
+}
+.hash-row .hash-value.is-pending { color: var(--text-muted); font-style: italic; }
+.hash-row .btn { flex: none; }
+
+/* ===================== Empty state ===================== */
+#emptyState { margin-top: var(--space-5); }
+
+/* ===================== Compare panel ===================== */
+.compare-panel { margin-top: var(--space-5); }
+
+/* ===================== Responsive ===================== */
+@media (max-width: 720px) {
+  #statusBadge { display: none; }
+  .hash-row { flex-direction: column; align-items: stretch; }
+  .hash-row .hash-algo { width: auto; }
+}
+
+@media (max-width: 460px) {
+  .file-drop { flex-direction: column; align-items: stretch; }
+}
