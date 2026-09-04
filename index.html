@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#08090d">
-  <meta name="description" content="Generate MD5, SHA-1, SHA-256, SHA-384 and SHA-512 hashes of text or files, and compare hashes — fast, private, and fully offline.">
+  <meta name="description" content="Generate MD5, SHA-1, SHA-256, SHA-384 and SHA-512 hashes of text or files, plus a hash-compare mode — fast, private, and fully offline.">
   <title>Hash Generator Pro — Web Utility Suite</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/css/base.css">
@@ -68,15 +68,16 @@
       </div>
 
       <div id="filePane" hidden>
-        <div class="file-drop">
-          <button id="btnUpload" class="btn btn--sm" title="Choose a file to hash">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-            Choose file
-          </button>
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose a file or drop it here">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+          <p id="dropzoneText">Drag &amp; drop a file here, or click to choose one</p>
+          <button id="btnUpload" class="btn btn--sm" type="button" title="Choose a file to hash">Choose file</button>
           <input type="file" id="fileInput" hidden>
-          <span id="fileMeta" class="muted mono" style="font-size:13px">No file selected</span>
         </div>
-        <p class="muted" style="font-size:12.5px;margin-top:var(--space-3)">Hashing runs entirely in your browser — nothing is uploaded anywhere. Very large files (well past 100&nbsp;MB) may be slow, since MD5 runs synchronously on the main thread.</p>
+        <p id="fileMeta" class="muted mono" style="font-size:13px;margin-top:var(--space-3)">No file selected</p>
+        <p class="muted" style="font-size:12.5px;margin-top:var(--space-2)">Hashing runs entirely in your browser — nothing is uploaded anywhere. Very large files (well past 100&nbsp;MB) may be slow, since MD5 runs synchronously on the main thread.</p>
       </div>
 
       <div class="row" style="margin-top:var(--space-4)">
@@ -106,8 +107,20 @@
       <h2 class="pane-title" style="margin-bottom:var(--space-3)">Compare against an expected hash</h2>
       <div class="row wrap gap-3 center">
         <div class="field flex-1" style="min-width:240px">
+          <label for="compareInput" class="sr-only">Expected hash</label>
           <input type="text" id="compareInput" class="mono" spellcheck="false" autocapitalize="off" autocomplete="off"
             placeholder="Paste an expected hash to compare…" aria-label="Expected hash">
+        </div>
+        <div class="field" style="width:auto">
+          <label for="compareAlgo" class="sr-only">Algorithm</label>
+          <select id="compareAlgo" aria-label="Algorithm to compare against">
+            <option value="auto">Auto-detect</option>
+            <option value="md5">MD5</option>
+            <option value="sha1">SHA-1</option>
+            <option value="sha256">SHA-256</option>
+            <option value="sha384">SHA-384</option>
+            <option value="sha512">SHA-512</option>
+          </select>
         </div>
         <span id="compareResult" class="badge" hidden></span>
       </div>

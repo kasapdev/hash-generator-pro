@@ -30,15 +30,31 @@
   resize: vertical;
 }
 
-.file-drop {
+/* ===================== Dropzone ===================== */
+.dropzone {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  padding: var(--space-4);
-  border: 1px dashed var(--border-strong);
+  justify-content: center;
+  gap: var(--space-2);
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  border: 1.5px dashed var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
+}
+.dropzone svg { width: 32px; height: 32px; opacity: .6; margin-bottom: var(--space-1); }
+.dropzone p { margin: 0; font-size: 13.5px; }
+.dropzone .btn { margin-top: var(--space-1); }
+.dropzone:hover,
+.dropzone:focus-visible { border-color: var(--brand-500); color: var(--text); background: var(--surface-2); }
+.dropzone.is-dragover {
+  border-color: var(--brand-500);
+  background: var(--gradient-brand-soft);
+  color: var(--text);
 }
 
 /* ===================== Results ===================== */
@@ -81,14 +97,22 @@
 
 /* ===================== Compare panel ===================== */
 .compare-panel { margin-top: var(--space-5); }
+.compare-panel #compareAlgo { min-width: 140px; }
+.compare-panel .badge { flex: none; }
 
 /* ===================== Responsive ===================== */
 @media (max-width: 720px) {
   #statusBadge { display: none; }
   .hash-row { flex-direction: column; align-items: stretch; }
   .hash-row .hash-algo { width: auto; }
+  .compare-panel .row { flex-direction: column; align-items: stretch; }
+  .compare-panel .field { width: 100% !important; }
 }
 
 @media (max-width: 460px) {
-  .file-drop { flex-direction: column; align-items: stretch; }
+  .dropzone { padding: var(--space-6) var(--space-3); }
+}
+
+@media (max-width: 360px) {
+  .hash-row .hash-value { min-width: 0; }
 }

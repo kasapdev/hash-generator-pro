@@ -14,7 +14,6 @@
      Verified against known test vectors:
        md5("")    = d41d8cd98f00b204e9800998ecf8427e
        md5("abc") = 900150983cd24fb0d6963f7d28e17f72
-       md5("a" x 1000000) = 7707d6ae4e027c70eea2a935c2296f21
      ================================================================= */
   var MD5_T = [
     0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
@@ -147,6 +146,7 @@
   var textInput = document.getElementById('textInput');
   var inputMeta = document.getElementById('inputMeta');
 
+  var dropzone = document.getElementById('dropzone');
   var btnUpload = document.getElementById('btnUpload');
   var fileInput = document.getElementById('fileInput');
   var fileMeta = document.getElementById('fileMeta');
@@ -157,6 +157,7 @@
   var emptyState = document.getElementById('emptyState');
 
   var compareInput = document.getElementById('compareInput');
+  var compareAlgo = document.getElementById('compareAlgo');
   var compareResult = document.getElementById('compareResult');
   var compareHint = document.getElementById('compareHint');
 
@@ -264,6 +265,7 @@
   }
 
   function hashCurrentFile(file) {
+    setStatus('busy', 'Reading file…');
     var reader = new FileReader();
     reader.onload = function () {
       hashBytes(new Uint8Array(reader.result));
@@ -284,6 +286,11 @@
     return match.length ? match[0] : null;
   }
 
+  function algoByKey(key) {
+    var match = ALGOS.filter(function (a) { return a.key === key; });
+    return match.length ? match[0] : null;
+  }
+
   function updateCompare() {
     var raw = compareInput.value.trim();
     if (!raw) { compareResult.hidden = true; compareHint.textContent = ''; return; }
@@ -295,7 +302,10 @@
       compareHint.textContent = '';
       return;
     }
-    var algo = detectAlgoByLength(clean);
+
+    var selected = compareAlgo.value;
+    var algo = selected === 'auto' ? detectAlgoByLength(clean) : algoByKey(selected);
+
     if (!algo) {
       compareResult.hidden = false;
       compareResult.className = 'badge badge--warning';
@@ -303,18 +313,28 @@
       compareHint.textContent = clean.length + ' hex chars doesn’t match MD5, SHA-1, SHA-256, SHA-384 or SHA-512.';
       return;
     }
+
+    var lenNote = selected === 'auto' ? ' (detected by length, ' + clean.length + ' hex chars)' : '';
+    if (selected !== 'auto' && algo.len !== clean.length) {
+      compareResult.hidden = false;
+      compareResult.className = 'badge badge--warning';
+      compareResult.textContent = 'Wrong length for ' + algo.label;
+      compareHint.textContent = algo.label + ' hashes are ' + algo.len + ' hex chars; this input has ' + clean.length + '.';
+      return;
+    }
+
     var computed = lastHashes[algo.key];
     compareResult.hidden = false;
     if (!computed) {
       compareResult.className = 'badge';
       compareResult.textContent = 'Waiting for ' + algo.label + '…';
-      compareHint.textContent = 'Detected as ' + algo.label + ' by length (' + clean.length + ' hex chars).';
+      compareHint.textContent = 'Comparing against ' + algo.label + lenNote + '.';
       return;
     }
     var isMatch = computed.toLowerCase() === clean;
     compareResult.className = 'badge ' + (isMatch ? 'badge--success' : 'badge--danger');
     compareResult.textContent = isMatch ? 'Match (' + algo.label + ')' : 'No match (' + algo.label + ')';
-    compareHint.textContent = 'Detected as ' + algo.label + ' by length (' + clean.length + ' hex chars).';
+    compareHint.textContent = 'Comparing against ' + algo.label + lenNote + '.';
   }
 
   /* =================================================================
@@ -337,6 +357,7 @@
       clearResults();
       setStatus('', 'Ready');
     }
+    updateInputMeta();
     persist();
   }
 
@@ -352,38 +373,73 @@
   }
 
   /* =================================================================
-     FILE HANDLING
+     FILE HANDLING (choose + drag & drop)
      ================================================================= */
   function triggerUpload() { fileInput.click(); }
 
-  fileInput.addEventListener('change', function () {
-    var file = fileInput.files && fileInput.files[0];
+  function acceptFile(file) {
     if (!file) return;
     currentFile = file;
-    fileMeta.textContent = file.name + ' · ' + humanBytes(file.size);
+    fileMeta.textContent = file.name + ' · ' + humanBytes(file.size) + ' · ' + (file.type || 'unknown type');
     hashCurrentFile(file);
+  }
+
+  fileInput.addEventListener('change', function () {
+    var file = fileInput.files && fileInput.files[0];
+    acceptFile(file);
     fileInput.value = '';
   });
 
+  dropzone.addEventListener('click', function (e) {
+    if (e.target === btnUpload) return; // avoid double-trigger (button already opens picker)
+    triggerUpload();
+  });
+  dropzone.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerUpload(); }
+  });
+
+  ['dragenter', 'dragover'].forEach(function (evt) {
+    dropzone.addEventListener(evt, function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('is-dragover');
+    });
+  });
+  ['dragleave', 'dragend'].forEach(function (evt) {
+    dropzone.addEventListener(evt, function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('is-dragover');
+    });
+  });
+  dropzone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dropzone.classList.remove('is-dragover');
+    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) acceptFile(file);
+  });
+
   /* =================================================================
-     PERSISTENCE
+     PERSISTENCE — text input only (never files)
      ================================================================= */
   function persist() {
     WUS.store.set(STORE_KEY, {
       mode: mode,
       text: textInput.value,
-      compare: compareInput.value
+      compare: compareInput.value,
+      compareAlgo: compareAlgo.value
     });
   }
   var persistDebounced = WUS.debounce(persist, 400);
 
   function restore() {
     var saved = WUS.store.get(STORE_KEY, null);
-    if (!saved) { clearResults(); return; }
+    if (!saved) { clearResults(); updateInputMeta(); return; }
     if (typeof saved.text === 'string') textInput.value = saved.text;
     if (typeof saved.compare === 'string') compareInput.value = saved.compare;
+    if (typeof saved.compareAlgo === 'string') compareAlgo.value = saved.compareAlgo;
     setMode('text'); // files aren't persisted across sessions
-    updateInputMeta();
   }
 
   /* =================================================================
@@ -392,6 +448,7 @@
   function clearAll() {
     textInput.value = '';
     compareInput.value = '';
+    compareAlgo.value = 'auto';
     currentFile = null;
     fileMeta.textContent = 'No file selected';
     clearResults();
@@ -439,7 +496,7 @@
      ================================================================= */
   tabText.addEventListener('click', function () { setMode('text'); });
   tabFile.addEventListener('click', function () { setMode('file'); });
-  btnUpload.addEventListener('click', triggerUpload);
+  btnUpload.addEventListener('click', function (e) { e.stopPropagation(); triggerUpload(); });
   btnClear.addEventListener('click', clearAll);
 
   var hashTextDebounced = WUS.debounce(hashCurrentText, 350);
@@ -458,6 +515,10 @@
   compareInput.addEventListener('input', function () {
     updateCompare();
     persistDebounced();
+  });
+  compareAlgo.addEventListener('change', function () {
+    updateCompare();
+    persist();
   });
 
   WUS.registerShortcut('mod+enter', function () { if (mode === 'text') hashCurrentText(); }, 'Hash current text');
